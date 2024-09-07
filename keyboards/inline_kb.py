@@ -1,26 +1,54 @@
-# from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types.inline_keyboard_button import InlineKeyboardButton
+from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
-# EXPIRE_TIME = None
+back_button = InlineKeyboardButton(
+    text="В меню", 
+    callback_data="to_menu"
+)
 
-# # get_docs inline keyboard
-# get_docs_kb = InlineKeyboardMarkup(row_width=1)
-# docs_button = InlineKeyboardButton(
-#     text="Источники из документации", 
-#     callback_data="get_docs", 
-#     expire=EXPIRE_TIME
-# )
-# get_docs_kb.add(docs_button)
+back_to_menu_kb = InlineKeyboardMarkup(
+    inline_keyboard=[[back_button]]
+)
 
-# # feedback inline keyboard
-# feedback_kb = InlineKeyboardMarkup(row_width=2)
-# like_button = InlineKeyboardButton(
-#     text='👍', 
-#     callback_data="like", 
-#     expire=EXPIRE_TIME
-# )
-# dislike_button = InlineKeyboardButton(
-#     text='👎', 
-#     callback_data="dislike", 
-#     expire=EXPIRE_TIME
-# )
-# feedback_kb.row(like_button, dislike_button)
+try_again_button = InlineKeyboardButton(
+    text="Попробовать снова",
+    callback_data="test12"
+)
+
+end_test_kb = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [try_again_button],
+        [back_button]
+    ]
+)
+
+
+def get_tasks_kb(
+        mode: str="problem",
+        count: int=12
+    ) -> InlineKeyboardMarkup:
+
+    assert mode in {"problem", "test"}
+
+    buttons = []
+
+    for i in range(1, count + 1):
+        text = str(i)
+        callback = mode+text
+        buttons.append(InlineKeyboardButton(
+            text=text,
+            callback_data=callback
+        ))
+
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[
+            buttons[:4],
+            buttons[4:8],
+            buttons[8:],
+            [back_button]
+        ]
+    )
+
+    return kb
+
+            

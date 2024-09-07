@@ -1,9 +1,10 @@
 import os, requests, aiohttp
 from pydantic import BaseModel, parse_obj_as
 from typing import List, Dict, Tuple
+from aiogram import types
 
 TOKEN = os.getenv('GPN_CHATBOT_TOKEN')
-# URL = os.getenv('GPN_API_URL')
+
 
 WELCOME_MESSAGE = """Привет! 
 Добро пожаловать в Math Club 
@@ -11,9 +12,9 @@ WELCOME_MESSAGE = """Привет!
 Скоро ты поймёшь, что подготовка к экзаменам может быть весёлой и интересной!
 Выбери режим, чтобы начать:"""
 
-# FEEDBACK_MESSAGE = "Пожалуйста, оцените качество ответа виртуального ассистента!"
 
 ERROR_MESSAGE = "Что-то пошло не так..."
+
 
 TEMPLATE = """СОВЕТЫ:
 
@@ -38,92 +39,105 @@ TEMPLATE = """СОВЕТЫ:
 Решение задачи
 {solving}"""
 
-class DocumentProvisionReference(BaseModel):
-    content: str
-    meta: Dict[str, str]
+
+PROBLEM_MODE_MESSAGE = """Каждое правильно решённое задание даёт тебе 100 очков
+Тебе нужно набрать 500, чтобы открыть тест по теме
+Удачи!"""
 
 
-class ComplexQueryAnswerResponse(BaseModel):
-    question: str
-    answer: str
-    sources: str
-    provisions: List[DocumentProvisionReference]
+TEST_MODE_MESSAGE = """Чтобы пройти тест тебе нужно ответить верно на 7 из 10 вопросов
+Удачи!"""
 
 
-class StringListResponse(BaseModel):
-    response: List[str]
-    
-    
-# async def query_docs_async(body, template_id=1) -> ComplexQueryAnswerResponse:
-#     url = f"{URL}/api/docs/query/{template_id}"
-#     headers = {"Content-Type": "text/plain"}
-    
-#     async with aiohttp.ClientSession() as session:
-#         async with session.post(url, data=body, headers=headers) as response:
-            
-#             if response.status == 200:
-#                 resp_json = await response.json()
-#                 return ComplexQueryAnswerResponse.parse_obj(resp_json)
-#             else:
-#                 raise Exception(f"Failed with status code {response.status}")
-            
+PROFILE_MODE_MESSAGE = """{name}
 
-# async def find_doc_provisions(body) -> StringListResponse:
-#     url = f"{URL}/api/docs/provisions"
-#     headers = {"Content-Type": "text/plain"}
-    
-#     async with aiohttp.ClientSession() as session:
-#         async with session.post(url, data=body, headers=headers) as response:
-            
-#             if response.status == 200:
-#                 resp_json = await response.json()
-#                 return StringListResponse.parse_obj(resp_json)
-#             else:
-#                 raise Exception(f"Failed with status code {response.status}")
+Уровень 💪: Математический нубик
+Очки 🎯: 1200
+Дней до ЕГЭ 📅: 150
+
+Пройденные задания ✍🏻:
+1. Планиметрия 🔲
+2. Векторы 🔲
+3. Стереометрия 🔲
+4. Начала теории вероятности 🔲
+5. Вероятности сложных событий 🔲
+6. Простейшие уравнения 🔲
+7. Вычисления и преобразования 🔲
+8. Производная и первообразная 🔲
+9. Задачи с прикладным содержанием 🔲
+10. Текстовые задачи 🔲
+11. Графики функций 🔲
+12. Наибольшее и наименьшее значение функций ✅
+
+Достижания ⭐:
+Достижение 1
+Достижение 2
+Достижение 3"""
 
 
-def parse_provisions(provisions: DocumentProvisionReference) -> Tuple[str, Tuple]:
-    contents = set()
-    metas = set()
-    
-    for i in provisions:
-        meta = ", ".join(i.meta.values())
-        content_text = i.content
-        content = ":\n".join([meta, content_text])
-        metas.update([meta])
-        contents.update([content])
-        
-    meta = "\n".join(metas)
-    return meta, tuple(contents)
-          
-
-def parse_model_response(response: ComplexQueryAnswerResponse) -> Tuple[str, Tuple]:
-    
-    question = response.question
-    answer = response.answer
-    provisions = response.provisions
-    
-    meta, contents = parse_provisions(provisions)
-    model_answer = TEMPLATE.format(question=question, meta=meta, answer=answer)
-    
-    return model_answer, tuple(contents)
+INFO_MODE_MESSAGE = """Тут будет длинное и подробно описание..."""
 
 
-def parse_docs_response(provisions: StringListResponse) -> Tuple:
-    return tuple(provisions.response)
+CHOOSE_TASK_MESSAGE = """Выбери номер задания:
+1. Планиметрия
+2. Векторы
+3. Стереометрия
+4. Начала теории вероятности
+5. Вероятности сложных событий
+6. Простейшие уравнения
+7. Вычисления и преобразования
+8. Производная и первообразная
+9. Задачи с прикладным содержанием
+10. Текстовые задачи
+11. Графики функций
+12. Наибольшее и наименьшее значение функций
+"""
+
+test_12 = [
+    {
+        "question": "AgACAgIAAxkBAAIBS2bbhopsjZV40Qs-DOGU2EBfos2yAAJB6TEbBv7gSvMPhA2JUd02AQADAgADeAADNgQ",
+        "answer": 1  # Индекс правильного ответа
+    },
+    {
+        "question": "AgACAgIAAxkBAAIBTWbbhpRUBo5zfAQMDxEsTlYLt6bdAAJA6TEbBv7gSozKaxtdJETVAQADAgADeAADNgQ",
+        "answer": 0
+    },
+    {
+        "question": "AgACAgIAAxkBAAIBT2bbhprt3E-RefsAAQQsAUajfcnW5gACP-kxGwb-4EpIfXTi_o38RAEAAwIAA3gAAzYE",
+        "answer": 0
+    },
+    {
+        "question": "AgACAgIAAxkBAAIBUWbbhqqm9v-aIbFWE2bmnmTXrRoXAAJD6TEbBv7gSlx9nATNYQTcAQADAgADeAADNgQ",
+        "answer": 0
+    },
+    {
+        "question": "AgACAgIAAxkBAAIBU2bbhrWiD9chTZU9QRoQEvqe_u2bAAJC6TEbBv7gSrBJ4JKm6UDIAQADAgADeAADNgQ",
+        "answer": 0
+    },
+    {
+        "question": "AgACAgIAAxkBAAIBVWbbhr18DWDnOyCPKCQ_kT_gKeujAAI96TEbBv7gSiAuLd3_IJLNAQADAgADeAADNgQ",
+        "answer": 2
+    },
+    {
+        "question": "AgACAgIAAxkBAAIBV2bbhs38WJpQc0UmXPXRDsX1102VAAI-6TEbBv7gShCdwibzwR3yAQADAgADeAADNgQ",
+        "answer": 1
+    },
+    {
+        "question": "AgACAgIAAxkBAAIBWWbbhtlNdJ4sBHyEcinLoxcvtLzEAAI86TEbBv7gSjG5P2VCp9QiAQADAgADeAADNgQ",
+        "answer": 0
+    },
+    {
+        "question": "AgACAgIAAxkBAAIBXGbbhvh5gw98ekeKF2Tfpj7sQqorAAI66TEbBv7gSrqR-D3QvfQKAQADAgADeAADNgQ",
+        "answer": 0
+    },
+    {
+        "question": "AgACAgIAAxkBAAIBXmbbhwABuhhA2BNN3ASYISv-S9V_mgACO-kxGwb-4EopqUv5R2OVGQEAAwIAA3gAAzYE",
+        "answer": 1
+    },
+]
+
+OPTIONS = ["A", "B", "C", "D"]
 
 
-# async def get_model_response_from_api(text: str) -> Tuple[str, Tuple]:
-#     body = text.strip('\'"')
-#     response = await query_docs_async(body)
-#     return parse_model_response(response)
-
-
-# async def get_docs_from_api(text: str) -> Tuple:
-#     body = text.strip('\'"')
-#     provisions = await find_doc_provisions(body)
-#     print(provisions)
-#     return parse_docs_response(provisions)
-
-async def get_response(text: str) -> Tuple[str, Tuple]:
+async def get_response(text: str) -> str:
     return TEMPLATE.format(hints='', similar_tasks='', solving='')
