@@ -15,15 +15,19 @@ class TestStates(StatesGroup):
     waiting_for_answer = State()
     test_completed = State()
 
-
-@test_mode_router.callback_query(F.data == "test12")
+@test_mode_router.callback_query(F.data.contains("test"))
 async def start_test(
     message: types.Message, 
     state=FSMContext
 ) -> None:
     
     await state.set_state(TestStates.waiting_for_answer)
-    await ask_question(message.from_user.id, 0, 0, state)
+    await ask_question(
+        chat_id=message.from_user.id, 
+        question_index=0, 
+        score=0, 
+        state=state
+    )
 
 
 async def ask_question(
@@ -36,7 +40,6 @@ async def ask_question(
     if question_index < len(questions):
 
         question = questions[question_index]
-        options = OPTIONS
 
         await bot.send_photo(
             chat_id=chat_id,

@@ -178,35 +178,8 @@ async def set_other_mode(
     await send_return_message(message)
 
 
-    
-@menu_router.message(ModeStates.task_mode, F.text)
-async def task_response_handler(
-        message: types.Message, 
-        state: FSMContext
-    ) -> None: 
-
-    chat_id = message.from_user.id
-        
-    load_message = await bot.send_message(
-        chat_id=chat_id,
-        text="Анализируем решение..." 
-    )
-
-    model_response = await get_response(message.text)
-    
-    await bot.send_message(
-        chat_id=chat_id,
-        text=model_response,
-        reply_markup=back_to_menu_kb
-    )
-
-    await bot.delete_message(
-        chat_id=chat_id,
-        message_id=load_message.message_id
-    )
-
 @menu_router.message(F.photo)
 async def handle_photo(message: types.Message):
     # Получаем file_id из фото
-    file_id = message.photo[-1].file_id  # Берем максимальное качество фото
+    file_id = message.photo[-1].file_id
     await message.answer(f"Ваш file_id: `{file_id}`")
