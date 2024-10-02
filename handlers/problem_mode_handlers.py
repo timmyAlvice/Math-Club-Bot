@@ -22,7 +22,7 @@ async def start_test(
     
     await bot.send_message(
         message.from_user.id,
-        text="Задание"
+        text="Найдите точку минимума функции y = x^3 - 27x на отрезке [0, 4]"
     )
 
 
