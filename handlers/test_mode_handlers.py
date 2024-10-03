@@ -45,13 +45,9 @@ async def ask_question(
     state: FSMContext
 ) -> None:
     
-    if question_index < len(questions):
-
-        # user_data = await state.get_data()
-        # questions = user_data.get('questions') 
+    if question_index < len(questions): 
 
         question = questions[question_index]
-        print(f"\n\n{question}\n\n")
 
         # await bot.send_photo(
         #     chat_id=chat_id,
