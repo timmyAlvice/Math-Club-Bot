@@ -3,54 +3,123 @@ from aiogram import types
 from aiogram.fsm.context import FSMContext
 from aiogram.filters.command import Command
 from aiogram.filters.state import State, StatesGroup
+from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram import Router, F
+
 from create_bot import bot
+from llm import giga_llm
+from utils import COMPARE_LLM_PROMPT
 from keyboards import back_to_menu_kb
 from utils import get_response
 from handlers.menu_handlers import ModeStates
+from problem_generators import generate_quadratic_problem
 
 problem_mode_router = Router()
+problem_storage = MemoryStorage()
+
+class ProblemStates(StatesGroup):
+    waiting_for_solution = State()
+    # waiting_for_answer = State()
+    problem_completed = State()
+    
 
 @problem_mode_router.callback_query(
-    ModeStates.task_mode, 
+    # ModeStates.task_mode, 
     F.data.contains("problem")
 )
-async def start_test(
+async def start_problem(
     message: types.Message, 
     state=FSMContext
 ) -> None:
     
+    await state.set_state(ProblemStates.waiting_for_solution)
+    
+    function, answer, solution_explanation = generate_quadratic_problem()
+    problem = f"Найдите критические точки функции `{function}`"
+
+    await state.update_data(
+        problem=problem,
+        answer=answer,
+        solution_explanation=solution_explanation
+    )
+    
     await bot.send_message(
         message.from_user.id,
-        text="Найдите точку минимума функции y = x^3 - 27x на отрезке [0, 4]"
+        text=problem
     )
+    
+    await bot.send_message(
+        message.from_user.id,
+        text="Введите решение в тестовом формате:"
+    )
+    
+    
+def is_answer_correct(text):
+    text = text.lower()
+    
+    if text.endswith("ответ: верный"):
+        return True
+    
+    elif text.endswith("ответ: не верный"):
+        return False
+    
+    else:
+        return None
 
 
 @problem_mode_router.message(
-    ModeStates.task_mode, 
-    F.text
+    ProblemStates.waiting_for_solution
 )
-async def task_response_handler(
+async def problem_response_handler(
         message: types.Message, 
         state: FSMContext
     ) -> None: 
 
     chat_id = message.from_user.id
+    user_solution = message.text
         
     load_message = await bot.send_message(
         chat_id=chat_id,
-        text="Анализируем решение..." 
+        text="Искусственный интеллект анализирует ваше решение..." 
+    )
+    
+    data = await state.get_data()
+    problem = data.get("problem")
+    answer = data.get("answer")
+    solution_explanation = data.get("solution_explanation")
+    
+    prompt = COMPARE_LLM_PROMPT.format(
+        problem=problem,
+        answer=answer,
+        solution_explanation=solution_explanation,
+        user_solution=user_solution
     )
 
-    model_response = await get_response(message.text)
+    model_response = await giga_llm.generate_text(prompt)
     
     await bot.send_message(
         chat_id=chat_id,
         text=model_response,
         reply_markup=back_to_menu_kb
     )
+    
+    # if is_answer_correct(model_response):
+    #     await bot.send_message(
+    #         chat_id=chat_id,
+    #         text="Поздравляем! Ты заработал 100 очков!",
+    #         reply_markup=back_to_menu_kb
+    #     )
+        
+    # else:
+    #     await bot.send_message(
+    #         chat_id=chat_id,
+    #         text="Не расстраивайся! Не ошибается только тот, кто не готовится к экзаменам!",
+    #         reply_markup=back_to_menu_kb
+    #     )
 
     await bot.delete_message(
         chat_id=chat_id,
         message_id=load_message.message_id
     )
+    
+    await state.set_state(ProblemStates.problem_completed)

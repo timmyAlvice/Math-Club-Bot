@@ -1,4 +1,8 @@
 from aiogram import Bot
-from utils import TOKEN
+from dotenv import load_dotenv
+import os
 
-bot = Bot(token=TOKEN)
+load_dotenv()
+
+TG_TOKEN = os.getenv("TG_TOKEN")
+bot = Bot(token=TG_TOKEN)
