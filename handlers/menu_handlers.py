@@ -9,6 +9,7 @@ from create_bot import bot
 from keyboards import (
     choose_mode_kb, 
     back_to_menu_kb, 
+    about_kb,
     get_tasks_kb
 )
 
@@ -19,6 +20,7 @@ from utils import (
     TEST_MODE_MESSAGE, 
     PROFILE_MODE_MESSAGE, 
     INFO_MODE_MESSAGE, 
+    ABOUT_MESSAGE,
     get_response
 )
 
@@ -29,6 +31,7 @@ class ModeStates(StatesGroup):
     test_mode = State()
     profile_mode = State()
     info_mode = State()
+    about_mode = State()
 
 
 async def send_menu_message(
@@ -176,6 +179,24 @@ async def set_other_mode(
     )
 
     await send_return_message(message)
+
+
+@menu_router.message(F.text.lower() == "о проекте")
+async def set_other_mode(
+        message: types.Message, 
+        state: FSMContext
+    ) -> None:
+
+    chat_id = message.from_user.id
+    
+    await state.set_state(ModeStates.about_mode)    
+    await bot.send_message(
+        chat_id=chat_id,
+        text=ABOUT_MESSAGE,
+        reply_markup=about_kb
+    )
+
+    # await send_return_message(message)
 
 
 @menu_router.message(F.photo)

@@ -22,6 +22,22 @@ end_test_kb = InlineKeyboardMarkup(
     ]
 )
 
+vk_button = InlineKeyboardButton(
+    text="Группа в VK",
+    url="https://vk.com/"
+)
+
+support_button = InlineKeyboardButton(
+    text="Поддержать проект",
+    url="https://planeta.ru/"
+)
+
+about_kb = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [vk_button],
+        [support_button]
+    ]
+)
 
 def get_tasks_kb(
         mode: str="problem",

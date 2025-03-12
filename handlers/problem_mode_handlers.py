@@ -1,5 +1,6 @@
 import asyncio
 from aiogram import types
+from aiogram.enums.parse_mode import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.filters.command import Command
 from aiogram.filters.state import State, StatesGroup
@@ -10,9 +11,10 @@ from create_bot import bot
 from llm import giga_llm
 from utils import COMPARE_LLM_PROMPT
 from keyboards import back_to_menu_kb
-from utils import get_response
+from utils import get_response, extract_text_in_brackets
 from handlers.menu_handlers import ModeStates
 from problem_generators import generate_quadratic_problem
+import os
 
 problem_mode_router = Router()
 problem_storage = MemoryStorage()
@@ -35,18 +37,26 @@ async def start_problem(
     await state.set_state(ProblemStates.waiting_for_solution)
     
     function, answer, solution_explanation = generate_quadratic_problem()
-    problem = f"Найдите критические точки функции `{function}`"
+    problem = f"Найдите критические точки функции" # \n```Math\n{function}```
 
     await state.update_data(
         problem=problem,
         answer=answer,
-        solution_explanation=solution_explanation
+        solution_explanation=solution_explanation,
+    )
+
+    await bot.send_photo(
+        chat_id=message.from_user.id,
+        photo=types.FSInputFile(f'{os.getcwd()}/tmp.png'),
+        caption=problem,
+        parse_mode=ParseMode.MARKDOWN_V2
     )
     
-    await bot.send_message(
-        message.from_user.id,
-        text=problem
-    )
+    # await bot.send_message(
+    #     message.from_user.id,
+    #     text=problem,
+    #     parse_mode=ParseMode.MARKDOWN_V2
+    # )
     
     await bot.send_message(
         message.from_user.id,
@@ -54,17 +64,17 @@ async def start_problem(
     )
     
     
-def is_answer_correct(text):
-    text = text.lower()
+# def is_answer_correct(text):
+#     text = text.lower()
     
-    if text.endswith("ответ: верный"):
-        return True
+#     if text.endswith("ответ: верный"):
+#         return True
     
-    elif text.endswith("ответ: не верный"):
-        return False
+#     elif text.endswith("ответ: не верный"):
+#         return False
     
-    else:
-        return None
+#     else:
+#         return None
 
 
 @problem_mode_router.message(
@@ -96,11 +106,15 @@ async def problem_response_handler(
     )
 
     model_response = await giga_llm.generate_text(prompt)
+    processed_response = extract_text_in_brackets(model_response)
+
+    print(processed_response)
     
     await bot.send_message(
         chat_id=chat_id,
-        text=model_response,
-        reply_markup=back_to_menu_kb
+        text=processed_response,
+        reply_markup=back_to_menu_kb,
+        parse_mode=ParseMode.MARKDOWN_V2
     )
     
     # if is_answer_correct(model_response):
