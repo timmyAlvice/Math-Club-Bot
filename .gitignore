@@ -4,6 +4,9 @@
 .idea
 .vscode
 .DS_Store
+knowlage_base/
+knowlage_base.txt
+**.png
 
 **/.env.*
 **/.env

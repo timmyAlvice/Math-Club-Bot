@@ -1,4 +1,4 @@
-# ПРОТОТИП ФРОТ-ЭНДА ДЛЯ MATH APP
+# MVP Math Club App
 
 ## Структура проекта
 
@@ -7,6 +7,7 @@
 ├───handlers (хэндлеры отлова сообщений)
 │   ├──── __init__.py
 │   ├──── menu_handlers.py
+│   ├──── prblem_mode_handlers.py
 │   └──── test_mode_handlers.py
 │
 ├───keyboards (инициализация клавиатур)
@@ -14,9 +15,12 @@
 │   ├──── inline_kb.py
 │   └──── regular_kb.py
 │
-├─── utils.py (вспомогательные скрипты)
+├─── utils.py (вспомогательные скрипты и константы)
 ├─── create_bot.py (инициализация бота)
 ├─── create_dispatcher.py (инициализация диспетчера)
+├─── llm.py (инициализация языковой модели и RAG)
+├─── problem_generatirs.py (скрипты генерации задач)
+├─── test_generatirs.py (скрипты генерации тестов)
 │
 └─── main.py (запуск программы)
 

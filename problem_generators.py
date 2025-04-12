@@ -42,11 +42,11 @@ def generate_quadratic_problem():
     function = a*x**2 + b*x + c
     derivative = sp.diff(function, x)
     critical_points = sp.solve(derivative, x)
+    critical_points = '' if not critical_points else str(critical_points[0])
 
-    solution_explanation = [
-        f"Шаг 1: Находим производную функции: {derivative}",
-        f"Шаг 2: Решаем уравнение для нахождения критических точек: {derivative} = 0",
-    ]
+    solution_explanation = \
+        f"Шаг 1: Находим производную функции: f'(x) = {derivative}" + \
+        f"\nШаг 2: Решаем уравнение для нахождения критических точек: {derivative} = 0"
 
     get_expression_img(f"f(x) = {sp.latex(function)}")
 

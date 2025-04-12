@@ -8,7 +8,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram import Router, F
 
 from create_bot import bot
-from llm import giga_llm
+from llm import llm
 from utils import COMPARE_LLM_PROMPT
 from keyboards import back_to_menu_kb
 from utils import get_response, extract_text_in_brackets
@@ -37,10 +37,11 @@ async def start_problem(
     await state.set_state(ProblemStates.waiting_for_solution)
     
     function, answer, solution_explanation = generate_quadratic_problem()
-    problem = f"Найдите критические точки функции" # \n```Math\n{function}```
+    problem = f"Найдите критическую точку функции" # \n```Math\n{function}```
+    problem_for_state = problem + f"\nf(x) = {function}"
 
     await state.update_data(
-        problem=problem,
+        problem=problem_for_state,
         answer=answer,
         solution_explanation=solution_explanation,
     )
@@ -105,11 +106,10 @@ async def problem_response_handler(
         user_solution=user_solution
     )
 
-    model_response = await giga_llm.generate_text(prompt)
+    model_response = await llm.generate_text(prompt)
+    print(f"\n\nMODEL RESPONSE:\n{model_response}")
     processed_response = extract_text_in_brackets(model_response)
 
-    print(processed_response)
-    
     await bot.send_message(
         chat_id=chat_id,
         text=processed_response,
