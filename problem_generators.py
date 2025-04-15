@@ -1,7 +1,6 @@
 import random
 import sympy as sp
 import matplotlib.pyplot as plt
-from io import BytesIO
 
 
 def get_expression_img(expression: str) -> plt.figure:
@@ -15,7 +14,8 @@ def get_expression_img(expression: str) -> plt.figure:
         0.5, 0.5, expression,
         horizontalalignment='center',
         verticalalignment='center',
-        fontsize=20, color='black'
+        fontsize=20, 
+        color='black'
     )
 
     ax.figure.canvas.draw()
@@ -26,9 +26,6 @@ def get_expression_img(expression: str) -> plt.figure:
         bbox.height / 80
     )
 
-    # buf = BytesIO()
-    # fig.savefig(buf, format='png', bbox_inches='tight')
-    # buf.seek(0)
     fig.savefig('tmp.png', bbox_inches='tight')
     plt.close()
 
@@ -49,5 +46,4 @@ def generate_quadratic_problem():
         f"\nШаг 2: Решаем уравнение для нахождения критических точек: {derivative} = 0"
 
     get_expression_img(f"f(x) = {sp.latex(function)}")
-
     return function, critical_points, solution_explanation

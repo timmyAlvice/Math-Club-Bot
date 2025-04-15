@@ -7,10 +7,7 @@ from pathlib import Path
 from sentence_transformers import SentenceTransformer
 from utils import SYS_PROMPT
 
-
-# SBER_TOKEN = os.getenv("SBER_TOKEN")
 DEEP_SEEK_TOKEN = os.getenv("DEEP_SEEK_TOKEN")
-
 
 class LLM:
 
@@ -39,7 +36,6 @@ class LLM:
             self.save_vector_store()
 
     def _create_vector_store(self, context_file):
-        """Создание новой векторной базы из файла"""
         try:
             loader = TextLoader(context_file)
             documents = loader.load()
@@ -64,7 +60,6 @@ class LLM:
             raise RuntimeError(f"Ошибка создания базы знаний: {str(e)}")
 
     def load_vector_store(self) -> bool:
-        """Загрузка сохраненной векторной базы"""
         try:
             if not (self.index_path / "index.faiss").exists():
                 return False
@@ -81,7 +76,6 @@ class LLM:
             return False
 
     def save_vector_store(self):
-        """Сохранение векторной базы на диск"""
         try:
             self.persist_dir.mkdir(parents=True, exist_ok=True)
             self.vector_store.save_local(str(self.index_path))
@@ -90,7 +84,6 @@ class LLM:
             raise RuntimeError(f"Ошибка сохранения базы: {str(e)}")
 
     async def generate_text(self, prompt: str, k=3) -> str:
-        """Генерация текста с использованием RAG"""
         prompt_embedding = self.embedder.encode(prompt)
         retrieved_docs = self.vector_store.similarity_search_by_vector(
             prompt_embedding, k=k
@@ -107,13 +100,12 @@ class LLM:
             model="deepseek/deepseek-r1-distill-llama-70b:free",
             messages=[
                 {"role": "system", "content": SYS_PROMPT},
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": augmented_prompt}
             ],
             temperature=0.3,
             top_p=0.95
         )
 
-        print(f"\n\nPROMT:\n{prompt}")
         return completion.choices[0].message.content
 
 llm = LLM()
